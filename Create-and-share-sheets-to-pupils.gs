@@ -1,4 +1,11 @@
 var NUM_OF_FIXED_LINES = 2; // Too many uses of 'NUM_OF_FIXED_LINES + 1'
+var EMAIL_SUBJECT = "";
+
+/*********************************************************************************************************************************************************************************************************/
+function SendEmail(email, message) 
+{
+    MailApp.sendEmail(emailAddress, EMAIL_SUBJECT, message);
+}
 
 /*********************************************************************************************************************************************************************************************************/
 function ProceedPupil(line, source, url)
@@ -29,6 +36,8 @@ function ProceedPupil(line, source, url)
     // Share pupil's sheet
     var file = DriveApp.getFileById(dest.getId());
     file.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
+    
+    // SendEmail(email, ???);
 }
 
 /*********************************************************************************************************************************************************************************************************/
