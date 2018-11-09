@@ -2,8 +2,8 @@
 
 var NUM_OF_LINES_IN_HEADER       = 2;
 var MAX_NUM_OF_LINES_TO_PROCEED  = 50;
-var MAX_NUM_OF_ROWS_TO_PROCEED  = 20;
-var START_LINE_OF_SECOND_GROOP   = 30;
+var MAX_NUM_OF_ROWS_TO_PROCEED   = 20;
+var START_LINE_OF_SECOND_GROUP   = 30;
 var LIST_WITH_STUDENT_MARKS_NAME = "Marks";
 
 /********** Technical ***********************************************************************************************************************************************************************************************/
@@ -61,16 +61,16 @@ function ProceedClass(classSheet)
 {
     DriveApp.getRootFolder().createFolder(classSheet.getName());
 
-    for(var row = NUM_OF_LINES_TO_COPY; row < START_LINE_OF_SECOND_GROOP; ++row)
+    for(var row = NUM_OF_LINES_TO_COPY; row < START_LINE_OF_SECOND_GROUP; ++row)
     {
       if(IsEmail(classSheet.getRange("A" + row + ":A" + row).getValue()))
           ProceedStudent(row, classSheet, 1);
     }
 
-    for(var row = START_LINE_OF_SECOND_GROOP; row <= MAX_NUM_OF_LINES_TO_PROCEED; ++row)
+    for(var row = START_LINE_OF_SECOND_GROUP; row <= MAX_NUM_OF_LINES_TO_PROCEED; ++row)
     {
       if(IsEmail(classSheet.getRange("A" + row + ":A" + row).getValue()))
-          ProceedStudent(row, classSheet, START_LINE_OF_SECOND_GROOP);
+          ProceedStudent(row, classSheet, START_LINE_OF_SECOND_GROUP);
     }
 }
 
