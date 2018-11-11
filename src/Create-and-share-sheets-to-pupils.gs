@@ -2,8 +2,8 @@
 //========= User =====================================================================================================================================================================
 //====================================================================================================================================================================================
 
-var ROWS_IN_HEADER   = 2;       // Header size, see https://github.com/MyLibh/GoogleSheetsClassView#s-Requirements-Header
-var SECOND_GROUP_ROW = 17;      // The line the second group starts with, see https://github.com/MyLibh/GoogleSheetsClassView#s-Requirements 
+var ROWS_IN_HEADER   = 2;       // Header size,                                              see https://github.com/MyLibh/GoogleSheetsClassView#s-Requirements-Header
+var SECOND_GROUP_ROW = 17;      // The line the second group starts with,                    see https://github.com/MyLibh/GoogleSheetsClassView#s-Requirements
 var MARKS_LIST_NAME  = "Marks"; // Name of list in pupil's spreadsheet where marks would be, see https://github.com/MyLibh/GoogleSheetsClassView#s-Setup
 
 //====================================================================================================================================================================================
@@ -20,13 +20,9 @@ function Main()
 {
   const source = SpreadsheetApp.getActiveSpreadsheet().getSheets();
 
-  ProcessClass(source[0]);
-
-  /*
   var classesNum = SpreadsheetApp.getActiveSpreadsheet().getNumSheets();
   for(var class = 0; class < classesNum; ++class)
     ProcessClass(source[class]);
-  */
 }
 
 /*

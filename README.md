@@ -21,30 +21,36 @@
 
 ## <a name="s-Install"></a> Установка
 
-* _**Шаг 1:**_ Скачайте файл [скрипта](src/Create-and-share-sheets-to-pupils.gs)
-	```
-	git clone https://github.com/MyLibh/GoogleSheetsClassView
-	```
+* _**Шаг 0:**_ Скачайте файл скрипта([link](src/Create-and-share-sheets-to-pupils.gs)).
 
-* _**Шаг 1:**_ Откройте таблицу и нажмите *"Инструменты"*
+* _**Шаг 1:**_ Откройте таблицу и нажмите *"Инструменты"*:
 	![install-step1](res/Install/Step1.png)
 
-* _**Шаг 2:**_ Выберите *"Редактор скриптов"*
-	![install-step1](res/Install/Step2.png)
+* _**Шаг 2:**_ Выберите *"Редактор скриптов"*:
+	![install-step2](res/Install/Step2.png)
 
-* _**Шаг 3:**_ Переместите файл со скриптом на форму
-	![install-step1](res/Install/Step3.png)
+* _**Шаг 3:**_ Переместите файл со скриптом на форму:
+	![install-step3](res/Install/Step3.png)
 
-* _**Шаг 4:**_ Сохраните, нажав *кнопку* или *"Ctrl+S"*
-	![install-step1](res/Install/Step4.png)
+* _**Шаг 4:**_ Сохраните, нажав *кнопку* или *"Ctrl+S"*:
+	![install-step4](res/Install/Step4.png)
 
-* _**Шаг 5:**_ Придумайте название проекта(например, *"Script"*)
-	![install-step1](res/Install/Step5.png)
+* _**Шаг 5:**_ Придумайте название проекта(например, *"Script"*):
+	![install-step5](res/Install/Step5.png)
 
-* _**Шаг 6:**_ Нажмите *"ОК"*
-	![install-step1](res/Install/Step6.png)
+* _**Шаг 6:**_ Нажмите *"ОК"*:
+	![install-step6](res/Install/Step6.png)
 
 ## <a name="s-Setup"></a> Настройка
+
+* _**Шаг 1:**_ Установите [размер шапки](#s-Requirements-Header):
+	![setup-step1](res/Setup/Step1.png)
+
+* _**Шаг 2:**_ Установите [начало шапки](#s-Requirements-Header):
+	![setup-step2](res/Setup/Step2.png)
+
+* _**Шаг 3:**_ Установите название для листа, в котором будут содержаться оценки ученика:
+	![setup-step3](res/Setup/Step3.png)
 
 ## <a name="s-Requirements"></a> Требования
 
@@ -78,8 +84,14 @@
 ## <a name="s-Launch"></a> Запуск
 
 * _**Шаги 1-2:**_ Для запуска необходимо в редакторе скриптов([см. Установка](#s-Install)) выбрать функцию *"Main"*:
-	![install-step1](res/Launch/Step1.png)
-	![install-step1](res/Launch/Step2.png)
+	![launch-step1](res/Launch/Step1.png)
+	![launch-step2](res/Launch/Step2.png)
 
-* _**Шаг 3:**_ Запустить скрипт, нажав на *кнопку*
-	![install-step1](res/Launch/Step3.png)
+* _**Шаг 3:**_ Запустить скрипт, нажав на *кнопку*:
+	![launch-step3](res/Launch/Step3.png)
+
+* _**Шаг 4:**_ Откройте доступ скрипту, нажав на *"Предоставить разрешение"*:
+	![launch-step4](res/Launch/Step4.png)
+
+* _**Шаг 5:**_ Поочередно открывайте созданные файлы и разрешайте доступ, нажав на *"Открыть доступ"*:
+	![launch-step5](res/Launch/Step5.png)
