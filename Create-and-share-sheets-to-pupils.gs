@@ -10,7 +10,7 @@ var MARKS_LIST_NAME  = "Marks"; // -//-
 //========= Technical ================================================================================================================================================================
 //====================================================================================================================================================================================
 
-var NUM_OF_ROWS_TO_COPY = ROWS_IN_HEADER + 1;                     // Number of rows + 1 row for student's marks
+var NUM_OF_ROWS_TO_COPY = ROWS_IN_HEADER + 1;                             // Number of rows in header and row for student's marks
 var MAIN_SHEET_LINK     = SpreadsheetApp.getActiveSpreadsheet().getUrl(); // Link to the table with marks for all classes
 
 /*
