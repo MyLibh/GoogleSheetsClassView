@@ -21,7 +21,7 @@ function Main()
   const source = SpreadsheetApp.getActiveSpreadsheet().getSheets();
 
   ProcessClass(source[0]);
-  
+
   /*
   var classesNum = SpreadsheetApp.getActiveSpreadsheet().getNumSheets();
   for(var class = 0; class < classesNum; ++class)
@@ -126,43 +126,3 @@ function IsEmail(obj)
 
   return pattern.test(String(obj).toLowerCase());
 }
-
-//====================================================================================================================================================================================
-//========= User =====================================================================================================================================================================
-//====================================================================================================================================================================================
-//========= Technical ================================================================================================================================================================
-var NUM_OF_ROWS_TO_COPY = ROWS_IN_HEADER + 1;                     // Number of rows + 1 row for student's marks
-var MAIN_SHEET_LINK     = SpreadsheetApp.getActiveSpreadsheet().getUrl(); // Link to the table with marks for all classes
- * \brief  Main function of the script.
- */
-function Main()
-{
-  const source = SpreadsheetApp.getActiveSpreadsheet().getSheets();
-
-  ProcessClass(source[0]);
-  
-  /*
-  var classesNum = SpreadsheetApp.getActiveSpreadsheet().getNumSheets();
-  for(var class = 0; class < classesNum; ++class)
-    ProcessClass(source[class]);
-  */
-}
-
-/*
- * \brief  Processes each student in the class.
-  for(var row = NUM_OF_ROWS_TO_COPY; row < SECOND_GROUP_ROW; ++row)
-    if(IsEmail(classSheet.getRange("A" + row + ":A" + row).getValue()))
-      ProcessStudent(row, classSheet, 1);
-
-  const rowsNum = classSheet.getLastRow(); // Number of rows with data
-  for(var row = SECOND_GROUP_ROW + ROWS_IN_HEADER; row < rowsNum; ++row)
-    if(IsEmail(classSheet.getRange("A" + row + ":A" + row).getValue()))
-      ProcessStudent(row, classSheet, SECOND_GROUP_ROW);
-    // Set list name
-    studentSheets[0].setName(MARKS_LIST_NAME);
-
-    for(var i = 1; i <= ROWS_IN_HEADER; ++i)
-    {
-      var studentHeaderFormula = "=IMPORTRANGE(\"" + MAIN_SHEET_LINK + "\";\"" + className + "!B" + (i + groupOffset - 1) + ":CC" + (i + groupOffset - 1) + "\")";
-      studentSheets[0].getRange("A" + i + ":A" + i).setFormula(studentHeaderFormula);
-    }
