@@ -31,9 +31,8 @@ function ProcessClass(classSheet)
 {
   DriveApp.getRootFolder().createFolder(classSheet.getName());
 
-  const rowsNum = classSheet.getLastRow(); // Number of rows with data
   for(var rowGroup = 1; rowGroup <= GROUP_OFFSET; rowGroup += GROUP_OFFSET - 1)
-    for(var row = NUM_OF_ROWS_TO_COPY; row <= rowsNum; ++row)
+    for(var row = NUM_OF_ROWS_TO_COPY; row < GROUP_OFFSET; ++row)
       if(IsEmail(classSheet.getRange("A" + row + ":A" + row).getValue()))
         ProcessStudent(row, classSheet, rowGroup);
 }
