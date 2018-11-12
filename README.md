@@ -44,12 +44,15 @@
 ## <a name="s-Setup"></a> Настройка
 
 * _**Шаг 1:**_ Установите [размер шапки](#s-Requirements-Header):
+
 	![setup-step1](res/Setup/Step1.png)
 
 * _**Шаг 2:**_ Установите [начало шапки](#s-Requirements-Header):
+
 	![setup-step2](res/Setup/Step2.png)
 
 * _**Шаг 3:**_ Установите название для листа, в котором будут содержаться оценки ученика:
+
 	![setup-step3](res/Setup/Step3.png)
 
 ## <a name="s-Requirements"></a> Требования
