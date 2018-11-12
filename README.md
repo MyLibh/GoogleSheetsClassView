@@ -47,7 +47,7 @@
 
 	![setup-step1](res/Setup/Step1.png)
 
-* _**Шаг 2:**_ Установите [начало шапки](#s-Requirements-Header):
+* _**Шаг 2:**_ Установите [начало 2-ой шапки](#s-Requirements-Header):
 
 	![setup-step2](res/Setup/Step2.png)
 
