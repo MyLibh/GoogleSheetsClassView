@@ -1,5 +1,5 @@
 # Скрипт создания Google Sheets
-11 ноября 2018
+*11 ноября 2018*
 
 **Разработчики**
 * [Aleksei Goliguzov](https://github.com/MyLibh)  
