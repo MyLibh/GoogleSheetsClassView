@@ -10,8 +10,9 @@ var MARKS_LIST_NAME  = "Marks"; // Name of list in pupil's spreadsheet where mar
 //========= Technical ================================================================================================================================================================
 //====================================================================================================================================================================================
 
-var NUM_OF_ROWS_TO_COPY = ROWS_IN_HEADER + 1;                             // Number of rows in header and row for student's marks
-var MAIN_SHEET_LINK     = SpreadsheetApp.getActiveSpreadsheet().getUrl(); // Link to the table with marks for all classes
+var NUM_OF_ROWS_TO_COPY      = ROWS_IN_HEADER + 1;                             // Number of rows in header and row for student's marks
+var MAIN_SHEET_LINK          = SpreadsheetApp.getActiveSpreadsheet().getUrl(); // Link to the table with marks for all classes
+var MAIN_SHEET_PARENT_FOLDER = GetMainSheetFolder();                           // The folder that contains the table with marks
 
 /*
  * \brief  Main function of the script.
@@ -32,7 +33,7 @@ function Main()
  */
 function ProcessClass(classSheet)
 {
-  DriveApp.getRootFolder().createFolder(classSheet.getName());
+  MAIN_SHEET_PARENT_FOLDER.createFolder(classSheet.getName());
 
   for(var row = NUM_OF_ROWS_TO_COPY; row < SECOND_GROUP_ROW; ++row)
     if(IsEmail(classSheet.getRange("A" + row + ":A" + row).getValue()))
@@ -121,4 +122,17 @@ function IsEmail(obj)
   const pattern = /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
 
   return pattern.test(String(obj).toLowerCase());
+}
+
+/*
+ * \brief Finds main sheet folder
+ *
+ * \return The folder that contains the main table
+ */
+function GetMainSheetFolder()
+{
+  var msFileId = SpreadsheetApp.getActive().getId();
+  var msFile   = DriveApp.getFileById(msFileId);
+
+  return msFile.getParents().next();
 }
