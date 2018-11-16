@@ -42,9 +42,9 @@ function ProcessClass(classSheet)
   MAIN_SHEET_PARENT_FOLDER.createFolder(classSheet.getName());
 
   const rowsNum = classSheet.getLastRow(); // Number of rows with data
-  var lastRowInFirstGroup;
-  if (SECOND_GROUP_ROW == NO_SECOND_GROUP) lastRowInFirstGroup = rowsNum;
-  else lastRowInFirstGroup = SECOND_GROUP_ROW - 1;
+  var lastRowInFirstGroop = (SECOND_GROUP_ROW == NO_SECOND_GROOP)? 
+    rowsNum : 
+    SECOND_GROUP_ROW - 1;
   
   ProcessGroup(classSheet, 1, lastRowInFirstGroup);
   if (SECOND_GROUP_ROW != NO_SECOND_GROUP)
