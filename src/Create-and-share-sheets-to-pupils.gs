@@ -2,9 +2,9 @@
 //========= User =====================================================================================================================================================================
 //====================================================================================================================================================================================
 
-var ROWS_IN_HEADER   = 2;       // Header size,                                              see https://github.com/MyLibh/GoogleSheetsClassView#s-Requirements-Header
-var SECOND_GROUP_ROW = 17;      // The line the second group starts with,                    see https://github.com/MyLibh/GoogleSheetsClassView#s-Requirements
-var MARKS_LIST_NAME  = "Marks"; // Name of list in pupil's spreadsheet where marks would be, see https://github.com/MyLibh/GoogleSheetsClassView#s-Setup
+var ROWS_IN_HEADER   = 2;               // Header size,                                              see https://github.com/MyLibh/GoogleSheetsClassView#s-Requirements-Header
+var SECOND_GROUP_ROW = NO_SECOND_GROOP; // The line the second group starts with,                    see https://github.com/MyLibh/GoogleSheetsClassView#s-Requirements
+var MARKS_LIST_NAME  = "Marks";         // Name of list in pupil's spreadsheet where marks would be, see https://github.com/MyLibh/GoogleSheetsClassView#s-Setup
 
 //====================================================================================================================================================================================
 //========= Technical ================================================================================================================================================================
@@ -13,6 +13,12 @@ var MARKS_LIST_NAME  = "Marks"; // Name of list in pupil's spreadsheet where mar
 var NUM_OF_ROWS_TO_COPY      = ROWS_IN_HEADER + 1;                             // Number of rows in header and row for student's marks
 var MAIN_SHEET_LINK          = SpreadsheetApp.getActiveSpreadsheet().getUrl(); // Link to the table with marks for all classes
 var MAIN_SHEET_PARENT_FOLDER = GetMainSheetFolder();                           // The folder that contains the table with marks
+
+//====================================================================================================================================================================================
+//========= Flags ====================================================================================================================================================================
+//====================================================================================================================================================================================
+
+var NO_SECOND_GROOP;
 
 /*
  * \brief  Main function of the script.
@@ -35,14 +41,28 @@ function ProcessClass(classSheet)
 {
   MAIN_SHEET_PARENT_FOLDER.createFolder(classSheet.getName());
 
-  for(var row = NUM_OF_ROWS_TO_COPY; row < SECOND_GROUP_ROW; ++row)
-    if(IsEmail(classSheet.getRange("A" + row + ":A" + row).getValue()))
-      ProcessStudent(row, classSheet, 1);
-
   const rowsNum = classSheet.getLastRow(); // Number of rows with data
-  for(var row = SECOND_GROUP_ROW + ROWS_IN_HEADER; row < rowsNum; ++row)
+  var lastRowInFirstGroop;
+  if (SECOND_GROUP_ROW == NO_SECOND_GROOP) lastRowInFirstGroop = rowsNum;
+  else lastRowInFirstGroop = SECOND_GROUP_ROW - 1;
+  
+  ProcessGroop(classSheet, 1, lastRowInFirstGroop);
+  if (SECOND_GROUP_ROW != NO_SECOND_GROOP)
+    ProcessGroop(classSheet, SECOND_GROUP_ROW, rowsNum);
+}
+
+/*
+ * \brief  Processes each student in the groop.
+ *
+ * \param[in]  classSheet  Table(sheet) with grades.
+ * \param[in]  startRow    Row where groop starts.
+ * \param[in]  endRow      Row where groop ends.
+ */
+function ProcessGroop(classSheet, startRow, endRow)
+{
+  for(var row = startRow + ROWS_IN_HEADER; row <= endRow; ++row)
     if(IsEmail(classSheet.getRange("A" + row + ":A" + row).getValue()))
-      ProcessStudent(row, classSheet, SECOND_GROUP_ROW);
+      ProcessStudent(row, classSheet, startRow);
 }
 
 /*
