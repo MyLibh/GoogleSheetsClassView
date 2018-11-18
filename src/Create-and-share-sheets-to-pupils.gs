@@ -5,7 +5,7 @@
 var ROWS_IN_HEADER   = 2;               // Header size,                                              see https://github.com/MyLibh/GoogleSheetsClassView#s-Requirements-Header
 var SECOND_GROUP_ROW = NO_SECOND_GROUP; // The line the second group starts with,                    see https://github.com/MyLibh/GoogleSheetsClassView#s-Requirements
 var MARKS_LIST_NAME  = "Marks";         // Name of list in pupil's spreadsheet where marks would be, see https://github.com/MyLibh/GoogleSheetsClassView#s-Setup
-var LISTS_TO_COPY    = ["pooo", "ooop"];
+var LISTS_TO_COPY    = NO_LISTS_TO_COPY;
 
 //====================================================================================================================================================================================
 //========= Technical ================================================================================================================================================================
@@ -19,19 +19,25 @@ var MAIN_SHEET_PARENT_FOLDER = GetMainSheetFolder();                           /
 //========= Flags ====================================================================================================================================================================
 //====================================================================================================================================================================================
 
-var NO_SECOND_GROUP;
-var NO_LISTS_TO_COPY;
+var NO_SECOND_GROUP;  // Only one group exists
+var NO_LISTS_TO_COPY; // No lists for copying exist
 
 /*
  * \brief  Main function of the script.
  */
 function Main()
 {
-  const source = SpreadsheetApp.getActiveSpreadsheet().getSheets();
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
 
-  const classesNum = SpreadsheetApp.getActiveSpreadsheet().getNumSheets();
+  const source     = ss.getSheets();
+  const classesNum = ss.getNumSheets();
   for(var class = 0; class < classesNum; ++class)
-    ProcessClass(source[class]);
+    {
+      if(LISTS_TO_COPY != NO_LISTS_TO_COPY && LISTS_TO_COPY.indexOf(source[class].getName()) != -1)
+        continue;
+
+      ProcessClass(source[class]);
+    }
 }
 
 /*
@@ -44,8 +50,8 @@ function ProcessClass(classSheet)
   MAIN_SHEET_PARENT_FOLDER.createFolder(classSheet.getName());
 
   const rowsNum             = classSheet.getLastRow(); // Number of rows with data
-  const lastRowInFirstGroup = (SECOND_GROUP_ROW == NO_SECOND_GROOP)? rowsNum : SECOND_GROUP_ROW - 1;
-  
+  const lastRowInFirstGroup = (SECOND_GROUP_ROW == NO_SECOND_GROUP)? rowsNum : SECOND_GROUP_ROW - 1;
+
   ProcessGroup(classSheet, 1, lastRowInFirstGroup);
   if (SECOND_GROUP_ROW != NO_SECOND_GROUP)
     ProcessGroup(classSheet, SECOND_GROUP_ROW, rowsNum);
@@ -102,6 +108,8 @@ function ProcessStudent(row, classSheet, groupOffset)
       studentSheets[0].setColumnWidth(i, studentSheets[1].getColumnWidth(i + 1));
 
     studentSpreadsheet.deleteSheet(studentSheets[1]);
+
+    CopyLists(SpreadsheetApp.getActiveSpreadsheet(), studentSpreadsheet);
   }
 
   // Set content
@@ -122,12 +130,7 @@ function ProcessStudent(row, classSheet, groupOffset)
     studentSheets[0].getRange(studentMarksRange).setFormula(studentMarksFormula);
   }
 
-  // Share student's sheet
-  {
-    const file  = DriveApp.getFileById(studentSpreadsheet.getId());
-    const email = classSheet.getRange("A" + row + ":A" + row).getValue();
-    file.addViewer(email);
-  }
+  ShareSheet(studentSpreadsheet.getId(), classSheet, "A" + row + ":A" + row);
 }
 
 /*
@@ -155,4 +158,45 @@ function GetMainSheetFolder()
   var msFile   = DriveApp.getFileById(msFileId);
 
   return msFile.getParents().next();
+}
+
+/*
+ * \brief Shares sheet by email
+ *
+ * \param[in]  ssId  Spreadsheet id
+ * \param[in]  src   Sheet to get email
+ * \param[in]  rng   Range in 'src' with email
+ */
+function ShareSheet(ssId, src, rng)
+{
+  const file  = DriveApp.getFileById(ssId);
+  const email = src.getRange(rng).getValue();
+  file.addViewer(email);
+}
+
+/*
+ * \brief Copies list from 'src' to 'dest'
+ *
+ * \param[in]  list  List for copying
+ * \param[in]  src   Sheet, which contains 'list'
+ * \param[in]  dest  Destination of copying
+ */
+function CopyList(list, src, dest)
+{
+   src.getSheetByName(list).copyTo(dest);
+
+   dest.getSheets()[dest.getSheets().length - 1].setName(list);
+}
+
+/*
+ * \brief Copies all lists from 'LISTS_TO_COPY' to dest sheet
+ *
+ * \param[in]  src   Sheet, which contains 'LISTS_TO_COPY'
+ * \param[in]  dest  Destination of copying
+ */
+function CopyLists(src, dest)
+{
+  if(LISTS_TO_COPY != NO_LISTS_TO_COPY)
+    for(var i = 0; i < LISTS_TO_COPY.length; ++i)
+      CopyList(LISTS_TO_COPY[i], src, dest);
 }
