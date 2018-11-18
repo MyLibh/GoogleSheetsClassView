@@ -5,7 +5,7 @@
 var ROWS_IN_HEADER   = 2;               // Header size,                                              see https://github.com/MyLibh/GoogleSheetsClassView#s-Requirements-Header
 var SECOND_GROUP_ROW = NO_SECOND_GROUP; // The line the second group starts with,                    see https://github.com/MyLibh/GoogleSheetsClassView#s-Requirements
 var MARKS_LIST_NAME  = "Marks";         // Name of list in pupil's spreadsheet where marks would be, see https://github.com/MyLibh/GoogleSheetsClassView#s-Setup
-var LISTS_TO_COPY    = NO_LISTS_TO_COPY;
+var LISTS_TO_COPY    = ["Лист2"];
 
 //====================================================================================================================================================================================
 //========= Technical ================================================================================================================================================================
@@ -27,17 +27,17 @@ var NO_LISTS_TO_COPY; // No lists for copying exist
  */
 function Main()
 {
-  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const spreadsheet = SpreadsheetApp.getActiveSpreadsheet();
 
-  const source     = ss.getSheets();
-  const classesNum = ss.getNumSheets();
+  const source     = spreadsheet.getSheets();
+  const classesNum = spreadsheet.getNumSheets();
   for(var class = 0; class < classesNum; ++class)
-    {
-      if(LISTS_TO_COPY != NO_LISTS_TO_COPY && LISTS_TO_COPY.indexOf(source[class].getName()) != -1)
-        continue;
+  {
+    if(LISTS_TO_COPY != NO_LISTS_TO_COPY && LISTS_TO_COPY.indexOf(source[class].getName()) != -1)
+      continue;
 
-      ProcessClass(source[class]);
-    }
+    ProcessClass(source[class]);
+  }
 }
 
 /*
@@ -47,7 +47,8 @@ function Main()
  */
 function ProcessClass(classSheet)
 {
-  MAIN_SHEET_PARENT_FOLDER.createFolder(classSheet.getName());
+  if(!MAIN_SHEET_PARENT_FOLDER.getFoldersByName(classSheet.getName()).hasNext())
+    MAIN_SHEET_PARENT_FOLDER.createFolder(classSheet.getName());
 
   const rowsNum             = classSheet.getLastRow(); // Number of rows with data
   const lastRowInFirstGroup = (SECOND_GROUP_ROW == NO_SECOND_GROUP)? rowsNum : SECOND_GROUP_ROW - 1;
@@ -58,27 +59,27 @@ function ProcessClass(classSheet)
 }
 
 /*
- * \brief  Processes each student in the group.
+ * \brief  Processes each student in the group(in the range [firstRow, lastRow]).
  *
  * \param[in]  classSheet  Table(sheet) with grades.
- * \param[in]  startRow    Row where groop starts.
- * \param[in]  endRow      Row where groop ends.
+ * \param[in]  firstRow    First row in the group.
+ * \param[in]  lastRow     Last row in the group.
  */
-function ProcessGroup(classSheet, startRow, endRow)
+function ProcessGroup(classSheet, firstRow, lastRow)
 {
-  for(var row = startRow + ROWS_IN_HEADER; row <= endRow; ++row)
+  for(var row = firstRow + ROWS_IN_HEADER; row <= lastRow; ++row)
     if(IsEmail(classSheet.getRange("A" + row + ":A" + row).getValue()))
-      ProcessStudent(row, classSheet, startRow);
+      ProcessStudent(row, classSheet, firstRow);
 }
 
 /*
  * \brief  Processes student.
  *
- * \param[in]  row          Student's marks row
- * \param[in]  classSheet   Table(sheet) with grades.
- * \param[in]  groupOffset  Offset of the group
+ * \param[in]  row            Student's marks row
+ * \param[in]  classSheet     Table(sheet) with grades.
+ * \param[in]  firstRawGroup  First row in the group.
  */
-function ProcessStudent(row, classSheet, groupOffset)
+function ProcessStudent(row, classSheet, firstRawGroup)
 {
   const className   = classSheet.getName();                                   // Class
   const classFolder = DriveApp.getFoldersByName(className).next();            // Folder with name 'className'
@@ -87,6 +88,10 @@ function ProcessStudent(row, classSheet, groupOffset)
 
   // Create pupil spreadsheet
   {
+    var folderIterator = classFolder.getFilesByName(filename);
+    while(folderIterator.hasNext())
+      classFolder.removeFile(folderIterator.next());
+
     var studentSpreadsheet = SpreadsheetApp.create(filename, NUM_OF_ROWS_TO_COPY, columnsNum); // Student's spreadsheet
     var copyFile           = DriveApp.getFileById(studentSpreadsheet.getId());                 // Copy of 'studentSpreadsheet' int root folder
 
@@ -99,8 +104,9 @@ function ProcessStudent(row, classSheet, groupOffset)
     var studentSpreadsheet = SpreadsheetApp.openById(studentSpreadsheet.getId());
     classSheet.copyTo(studentSpreadsheet);
 
-    var studentSheets   = studentSpreadsheet.getSheets(); // Array of sheets(lists)
-    var copyFormatRange = "1:" + NUM_OF_ROWS_TO_COPY;     // Format copy range
+    const studentSheets   = studentSpreadsheet.getSheets(); // Array of sheets(lists)
+    const copyFormatRange = "1:" + NUM_OF_ROWS_TO_COPY;     // Format copy range
+
     studentSheets[1].getRange(copyFormatRange).copyTo(studentSheets[0].getRange(copyFormatRange), { formatOnly : true });
     studentSheets[0].deleteColumn(1);
 
@@ -120,7 +126,7 @@ function ProcessStudent(row, classSheet, groupOffset)
     // Set header
     for(var i = 1; i <= ROWS_IN_HEADER; ++i)
     {
-      var studentHeaderFormula = "=IMPORTRANGE(\"" + MAIN_SHEET_LINK + "\";\"" + className + "!B" + (i + groupOffset - 1) + ":CC" + (i + groupOffset - 1) + "\")";
+      var studentHeaderFormula = "=IMPORTRANGE(\"" + MAIN_SHEET_LINK + "\";\"" + className + "!B" + (i + firstRawGroup - 1) + ":CC" + (i + firstRawGroup - 1) + "\")";
       studentSheets[0].getRange("A" + i + ":A" + i).setFormula(studentHeaderFormula);
     }
 
