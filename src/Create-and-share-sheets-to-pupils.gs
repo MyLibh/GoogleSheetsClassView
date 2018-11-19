@@ -27,10 +27,10 @@ var NO_LISTS_TO_COPY; // No lists for copying exist
  */
 function Main()
 {
-  const spreadsheet = SpreadsheetApp.getActiveSpreadsheet();
+  const spreadSheet = SpreadsheetApp.getActiveSpreadsheet();
 
-  const source     = spreadsheet.getSheets();
-  const classesNum = spreadsheet.getNumSheets();
+  const source     = spreadSheet.getSheets();
+  const classesNum = spreadSheet.getNumSheets();
   for(var class = 0; class < classesNum; ++class)
   {
     if(LISTS_TO_COPY != NO_LISTS_TO_COPY && LISTS_TO_COPY.indexOf(source[class].getName()) != -1)
