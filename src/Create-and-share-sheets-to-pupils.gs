@@ -3,9 +3,9 @@
 //====================================================================================================================================================================================
 
 var ROWS_IN_HEADER   = 2;               // Header size,                                              see https://github.com/MyLibh/GoogleSheetsClassView#s-Requirements-Header
-var SECOND_GROUP_ROW = NO_SECOND_GROUP; // The line the second group starts with,                    see https://github.com/MyLibh/GoogleSheetsClassView#s-Requirements
+var SECOND_GROUP_ROW = 17;              // The line the second group starts with,                    see https://github.com/MyLibh/GoogleSheetsClassView#s-Requirements
 var MARKS_LIST_NAME  = "Marks";         // Name of list in pupil's spreadsheet where marks would be, see https://github.com/MyLibh/GoogleSheetsClassView#s-Setup
-var LISTS_TO_COPY    = ["Лист2"];
+var LISTS_TO_COPY    = ["11Б"];
 
 //====================================================================================================================================================================================
 //========= Technical ================================================================================================================================================================
@@ -107,7 +107,7 @@ function ProcessStudent(row, classSheet, firstRawGroup)
     const studentSheets   = studentSpreadsheet.getSheets(); // Array of sheets(lists)
     const copyFormatRange = "1:" + NUM_OF_ROWS_TO_COPY;     // Format copy range
 
-    studentSheets[1].getRange(copyFormatRange).copyTo(studentSheets[0].getRange(copyFormatRange), { formatOnly : true });
+    studentSheets[1].getRange(copyFormatRange).copyTo(studentSheets[0].getRange(copyFormatRange), { formatOnly: true });
     studentSheets[0].deleteColumn(1);
 
     for(var i = 1; i < columnsNum; ++i)
@@ -189,9 +189,32 @@ function ShareSheet(ssId, src, rng)
  */
 function CopyList(list, src, dest)
 {
-   src.getSheetByName(list).copyTo(dest);
-
-   dest.getSheets()[dest.getSheets().length - 1].setName(list);
+   var sourceList = src.getSheetByName(list); 
+  
+   sourceList.copyTo(dest);
+  
+   var newList = dest.getSheets()[dest.getSheets().length - 1];
+     
+   newList.clear({ formatOnly: false, contentsOnly: true });
+   newList.setName(list);
+  
+   var colomnsNum = sourceList.getLastColumn();
+   var rowsNum    = sourceList.getLastRow();
+   var lastColomnName = "";
+  
+   var A_ascii = "A".charCodeAt(0);
+   while(colomnsNum > 0)
+   {
+     lastColomnName+= String.fromCharCode(A_ascii + colomnsNum%26);
+     colomnsNum-= colomnsNum%26;
+     colomnsNum/= 26;
+   }
+  
+   lastColomnName = lastColomnName.split('').reverse().join('');
+  
+   var copiedListFormula = "=IMPORTRANGE(\"" + MAIN_SHEET_LINK + "\";\"" + list + "!A1:" + lastColomnName + rowsNum + "\")"; 
+  
+   newList.getRange("A1:A1").setFormula(copiedListFormula);
 }
 
 /*
