@@ -2,10 +2,10 @@
 //========= User =====================================================================================================================================================================
 //====================================================================================================================================================================================
 
-var ROWS_IN_HEADER   = 2;               // Header size,                                              see https://github.com/MyLibh/GoogleSheetsClassView#s-Requirements-Header
-var SECOND_GROUP_ROW = 17;              // The line the second group starts with,                    see https://github.com/MyLibh/GoogleSheetsClassView#s-Requirements
-var MARKS_LIST_NAME  = "Marks";         // Name of list in pupil's spreadsheet where marks would be, see https://github.com/MyLibh/GoogleSheetsClassView#s-Setup
-var LISTS_TO_COPY    = ["11Б"];
+var ROWS_IN_HEADER   = 2;                // Header size,                                              see https://github.com/MyLibh/GoogleSheetsClassView#s-Requirements-Header
+var SECOND_GROUP_ROW = NO_SECOND_GROUP;  // The line the second group starts with,                    see https://github.com/MyLibh/GoogleSheetsClassView#s-Requirements
+var MARKS_LIST_NAME  = "Marks";          // Name of list in pupil's spreadsheet where marks would be, see https://github.com/MyLibh/GoogleSheetsClassView#s-Setup
+var LISTS_TO_COPY    = NO_LISTS_TO_COPY; // Array of list names
 
 //====================================================================================================================================================================================
 //========= Technical ================================================================================================================================================================
@@ -14,6 +14,7 @@ var LISTS_TO_COPY    = ["11Б"];
 var NUM_OF_ROWS_TO_COPY      = ROWS_IN_HEADER + 1;                             // Number of rows in header and row for student's marks
 var MAIN_SHEET_LINK          = SpreadsheetApp.getActiveSpreadsheet().getUrl(); // Link to the table with marks for all classes
 var MAIN_SHEET_PARENT_FOLDER = GetMainSheetFolder();                           // The folder that contains the table with marks
+var STUDENTS_FOLDER          = TryToCreateStudentsFolder();                    // Folder with students' folders
 
 //====================================================================================================================================================================================
 //========= Flags ====================================================================================================================================================================
@@ -47,9 +48,6 @@ function Main()
  */
 function ProcessClass(classSheet)
 {
-  if(!MAIN_SHEET_PARENT_FOLDER.getFoldersByName(classSheet.getName()).hasNext())
-    MAIN_SHEET_PARENT_FOLDER.createFolder(classSheet.getName());
-
   const rowsNum             = classSheet.getLastRow(); // Number of rows with data
   const lastRowInFirstGroup = (SECOND_GROUP_ROW == NO_SECOND_GROUP)? rowsNum : SECOND_GROUP_ROW - 1;
 
@@ -68,8 +66,20 @@ function ProcessClass(classSheet)
 function ProcessGroup(classSheet, firstRow, lastRow)
 {
   for(var row = firstRow + ROWS_IN_HEADER; row <= lastRow; ++row)
-    if(IsEmail(classSheet.getRange("A" + row + ":A" + row).getValue()))
+  {
+    var emails = String(classSheet.getRange("A" + row + ":A" + row).getValue()).split(", ");
+    var hasValidEmail = false;
+    for(var i = 0; i < emails.length; ++i)      
+      if(IsEmail(emails[i]))
+      {
+         hasValidEmail = true;
+         
+         break;
+      }
+
+    if(hasValidEmail)
       ProcessStudent(row, classSheet, firstRow);
+  }
 }
 
 /*
@@ -81,21 +91,19 @@ function ProcessGroup(classSheet, firstRow, lastRow)
  */
 function ProcessStudent(row, classSheet, firstRawGroup)
 {
-  const className   = classSheet.getName();                                   // Class
-  const classFolder = DriveApp.getFoldersByName(className).next();            // Folder with name 'className'
-  const filename    = classSheet.getRange("B" + row + ":B" + row).getValue(); // Filename(student's full name)
+  const className   = classSheet.getName();                                   
+  const filename    = classSheet.getRange("B" + row + ":B" + row).getValue(); 
   const columnsNum  = classSheet.getLastColumn();                             // Number of columns with data
 
-  // Create pupil spreadsheet
+  // Create pupil's folder and spreadsheet
   {
-    var folderIterator = classFolder.getFilesByName(filename);
-    while(folderIterator.hasNext())
-      classFolder.removeFile(folderIterator.next());
+    var studentFolder      = STUDENTS_FOLDER.getFoldersByName(filename).hasNext() ? 
+                               STUDENTS_FOLDER.getFoldersByName(filename).next() :  
+                               STUDENTS_FOLDER.createFolder(filename);                            
+    var studentSpreadsheet = SpreadsheetApp.create(classSheet.getName(), NUM_OF_ROWS_TO_COPY, columnsNum); 
+    var copyFile           = DriveApp.getFileById(studentSpreadsheet.getId());                             // Copy of 'studentSpreadsheet'
 
-    var studentSpreadsheet = SpreadsheetApp.create(filename, NUM_OF_ROWS_TO_COPY, columnsNum); // Student's spreadsheet
-    var copyFile           = DriveApp.getFileById(studentSpreadsheet.getId());                 // Copy of 'studentSpreadsheet' int root folder
-
-    classFolder.addFile(copyFile);
+    studentFolder.addFile(copyFile);
     DriveApp.getRootFolder().removeFile(copyFile);
   }
 
@@ -107,7 +115,7 @@ function ProcessStudent(row, classSheet, firstRawGroup)
     const studentSheets   = studentSpreadsheet.getSheets(); // Array of sheets(lists)
     const copyFormatRange = "1:" + NUM_OF_ROWS_TO_COPY;     // Format copy range
 
-    studentSheets[1].getRange(copyFormatRange).copyTo(studentSheets[0].getRange(copyFormatRange), { formatOnly: true });
+    studentSheets[1].getRange(copyFormatRange).copyTo(studentSheets[0].getRange(copyFormatRange), { formatOnly : true });
     studentSheets[0].deleteColumn(1);
 
     for(var i = 1; i < columnsNum; ++i)
@@ -136,7 +144,10 @@ function ProcessStudent(row, classSheet, firstRawGroup)
     studentSheets[0].getRange(studentMarksRange).setFormula(studentMarksFormula);
   }
 
-  ShareSheet(studentSpreadsheet.getId(), classSheet, "A" + row + ":A" + row);
+  var emails = String(classSheet.getRange("A" + row + ":A" + row).getValue()).split(", ");
+  for(var i = 0; i < emails.length; ++i)
+    if(IsEmail(emails[i]))
+      ShareSheet(studentFolder.getId(), emails[i]);
 }
 
 /*
@@ -167,16 +178,28 @@ function GetMainSheetFolder()
 }
 
 /*
+ * \brief Creates students' folder if it does not exist
+ *
+ * \return The folder that will contain each student folder
+ */
+function TryToCreateStudentsFolder()
+{
+  return MAIN_SHEET_PARENT_FOLDER.getFoldersByName("Students").hasNext() ? 
+           MAIN_SHEET_PARENT_FOLDER.getFoldersByName("Students").next() :  
+           MAIN_SHEET_PARENT_FOLDER.createFolder("Students"); 
+}
+
+/*
  * \brief Shares sheet by email
  *
  * \param[in]  ssId  Spreadsheet id
  * \param[in]  src   Sheet to get email
  * \param[in]  rng   Range in 'src' with email
  */
-function ShareSheet(ssId, src, rng)
+function ShareSheet(ssId, email)
 {
   const file  = DriveApp.getFileById(ssId);
-  const email = src.getRange(rng).getValue();
+  
   file.addViewer(email);
 }
 
@@ -189,32 +212,9 @@ function ShareSheet(ssId, src, rng)
  */
 function CopyList(list, src, dest)
 {
-   var sourceList = src.getSheetByName(list); 
-  
-   sourceList.copyTo(dest);
-  
-   var newList = dest.getSheets()[dest.getSheets().length - 1];
-     
-   newList.clear({ formatOnly: false, contentsOnly: true });
-   newList.setName(list);
-  
-   var colomnsNum = sourceList.getLastColumn();
-   var rowsNum    = sourceList.getLastRow();
-   var lastColomnName = "";
-  
-   var A_ascii = "A".charCodeAt(0);
-   while(colomnsNum > 0)
-   {
-     lastColomnName+= String.fromCharCode(A_ascii + colomnsNum%26);
-     colomnsNum-= colomnsNum%26;
-     colomnsNum/= 26;
-   }
-  
-   lastColomnName = lastColomnName.split('').reverse().join('');
-  
-   var copiedListFormula = "=IMPORTRANGE(\"" + MAIN_SHEET_LINK + "\";\"" + list + "!A1:" + lastColomnName + rowsNum + "\")"; 
-  
-   newList.getRange("A1:A1").setFormula(copiedListFormula);
+   src.getSheetByName(list).copyTo(dest);
+
+   dest.getSheets()[dest.getSheets().length - 1].setName(list);
 }
 
 /*
