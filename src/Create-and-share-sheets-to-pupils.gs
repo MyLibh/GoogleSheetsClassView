@@ -2,10 +2,11 @@
 //========= User =====================================================================================================================================================================
 //====================================================================================================================================================================================
 
-var ROWS_IN_HEADER   = 2;                // Header size,                                              see https://github.com/MyLibh/GoogleSheetsClassView#s-Requirements-Header
-var SECOND_GROUP_ROW = NO_SECOND_GROUP;  // The line the second group starts with,                    see https://github.com/MyLibh/GoogleSheetsClassView#s-Requirements
-var MARKS_LIST_NAME  = "Marks";          // Name of list in pupil's spreadsheet where marks would be, see https://github.com/MyLibh/GoogleSheetsClassView#s-Setup
-var LISTS_TO_COPY    = NO_LISTS_TO_COPY; // Array of list names
+var ROWS_IN_HEADER       = 2;                // Header size,                                              see https://github.com/MyLibh/GoogleSheetsClassView#s-Requirements-Header
+var SECOND_GROUP_ROW     = NO_SECOND_GROUP;  // The line the second group starts with,                    see https://github.com/MyLibh/GoogleSheetsClassView#s-Requirements
+var LISTS_TO_COPY        = NO_LISTS_TO_COPY; // Array of list names
+var MARKS_LIST_NAME      = "Marks";          // Name of list in pupil's spreadsheet where marks would be, see https://github.com/MyLibh/GoogleSheetsClassView#s-Setup
+var STUDENTS_FOLDER_NAME = "Students";       // Name of folder with "A-D" class folders
 
 //====================================================================================================================================================================================
 //========= Technical ================================================================================================================================================================
@@ -14,7 +15,7 @@ var LISTS_TO_COPY    = NO_LISTS_TO_COPY; // Array of list names
 var NUM_OF_ROWS_TO_COPY      = ROWS_IN_HEADER + 1;                             // Number of rows in header and row for student's marks
 var MAIN_SHEET_LINK          = SpreadsheetApp.getActiveSpreadsheet().getUrl(); // Link to the table with marks for all classes
 var MAIN_SHEET_PARENT_FOLDER = GetMainSheetFolder();                           // The folder that contains the table with marks
-var STUDENTS_FOLDER          = TryToCreateStudentsFolder();                    // Folder with students' folders
+var STUDENTS_FOLDER          = TryToCreateStudentsFolder();                    // Folder with "A-D" class folders
 
 //====================================================================================================================================================================================
 //========= Flags ====================================================================================================================================================================
@@ -93,15 +94,18 @@ function ProcessStudent(row, classSheet, firstRawGroup)
 {
   const className   = classSheet.getName();                                   
   const filename    = classSheet.getRange("B" + row + ":B" + row).getValue(); 
-  const columnsNum  = classSheet.getLastColumn();                             // Number of columns with data
+  const columnsNum  = classSheet.getLastColumn(); // Number of columns with data
 
   // Create pupil's folder and spreadsheet
   {
-    var studentFolder      = STUDENTS_FOLDER.getFoldersByName(filename).hasNext() ? 
-                               STUDENTS_FOLDER.getFoldersByName(filename).next() :  
-                               STUDENTS_FOLDER.createFolder(filename);                            
-    var studentSpreadsheet = SpreadsheetApp.create(classSheet.getName(), NUM_OF_ROWS_TO_COPY, columnsNum); 
-    var copyFile           = DriveApp.getFileById(studentSpreadsheet.getId());                             // Copy of 'studentSpreadsheet'
+    var classFolder        = STUDENTS_FOLDER.getFoldersByName(className).hasNext() ? 
+                               STUDENTS_FOLDER.getFoldersByName(className).next() :  
+                               STUDENTS_FOLDER.createFolder(className);
+    var studentFolder      = classFolder.getFoldersByName(filename).hasNext() ? 
+                               classFolder.getFoldersByName(filename).next() :  
+                               classFolder.createFolder(filename);                            
+    var studentSpreadsheet = SpreadsheetApp.create("#" + " класс " + "####-####", NUM_OF_ROWS_TO_COPY, columnsNum); 
+    var copyFile           = DriveApp.getFileById(studentSpreadsheet.getId()); // Copy of 'studentSpreadsheet'
 
     studentFolder.addFile(copyFile);
     DriveApp.getRootFolder().removeFile(copyFile);
@@ -184,9 +188,9 @@ function GetMainSheetFolder()
  */
 function TryToCreateStudentsFolder()
 {
-  return MAIN_SHEET_PARENT_FOLDER.getFoldersByName("Students").hasNext() ? 
-           MAIN_SHEET_PARENT_FOLDER.getFoldersByName("Students").next() :  
-           MAIN_SHEET_PARENT_FOLDER.createFolder("Students"); 
+  return MAIN_SHEET_PARENT_FOLDER.getFoldersByName(STUDENTS_FOLDER_NAME).hasNext() ? 
+           MAIN_SHEET_PARENT_FOLDER.getFoldersByName(STUDENTS_FOLDER_NAME).next() :  
+           MAIN_SHEET_PARENT_FOLDER.createFolder(STUDENTS_FOLDER_NAME); 
 }
 
 /*
@@ -198,7 +202,7 @@ function TryToCreateStudentsFolder()
  */
 function ShareSheet(ssId, email)
 {
-  const file  = DriveApp.getFileById(ssId);
+  const file = DriveApp.getFileById(ssId);
   
   file.addViewer(email);
 }
@@ -212,9 +216,13 @@ function ShareSheet(ssId, email)
  */
 function CopyList(list, src, dest)
 {
-   src.getSheetByName(list).copyTo(dest);
+   var сopy_list = src.getSheetByName(list)
+   if(сopy_list != null)
+   {
+     сopy_list.copyTo(dest);
 
-   dest.getSheets()[dest.getSheets().length - 1].setName(list);
+     dest.getSheets()[dest.getSheets().length - 1].setName(list);
+   }
 }
 
 /*
