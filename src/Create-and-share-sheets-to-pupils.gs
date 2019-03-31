@@ -90,7 +90,7 @@ function ProcessGroup(classSheet, firstRow, lastRow)
  * \param[in]  classSheet     Table(sheet) with grades.
  * \param[in]  firstRawGroup  First row in the group.
  */
-function ProcessStudent(row, classSheet, firstRawGroup)
+function ProcessStudent(row, classSheet, firstRowGroup)
 {
   const className   = classSheet.getName();                                   
   const filename    = classSheet.getRange("B" + row + ":B" + row).getValue(); 
@@ -137,7 +137,7 @@ function ProcessStudent(row, classSheet, firstRawGroup)
     // Set header
     for(var i = 1; i <= ROWS_IN_HEADER; ++i)
     {
-      var studentHeaderFormula = "=IMPORTRANGE(\"" + MAIN_SHEET_LINK + "\";\"" + className + "!" + (i + firstRawGroup - 1) + ":" + (i + firstRawGroup - 1) + "\")";
+      var studentHeaderFormula = "=IMPORTRANGE(\"" + MAIN_SHEET_LINK + "\";\"" + className + "!" + (i + firstRowGroup - 1) + ":" + (i + firstRowGroup - 1) + "\")";
       studentSheets[0].getRange("A" + i + ":A" + i).setFormula(studentHeaderFormula);
     }
 
