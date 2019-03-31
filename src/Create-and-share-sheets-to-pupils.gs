@@ -3,8 +3,8 @@
 //====================================================================================================================================================================================
 
 var ROWS_IN_HEADER       = 2;                // Header size,                                              see https://github.com/MyLibh/GoogleSheetsClassView#s-Requirements-Header
-var SECOND_GROUP_ROW     = NO_SECOND_GROUP;  // The line the second group starts with,                    see https://github.com/MyLibh/GoogleSheetsClassView#s-Requirements
-var LISTS_TO_COPY        = NO_LISTS_TO_COPY; // Array of list names
+var SECOND_GROUP_ROW     = 23;               // The line the second group starts with,                    see https://github.com/MyLibh/GoogleSheetsClassView#s-Requirements
+var LISTS_TO_COPY        = ["информация"];   // Array of list names
 var MARKS_LIST_NAME      = "Marks";          // Name of list in pupil's spreadsheet where marks would be, see https://github.com/MyLibh/GoogleSheetsClassView#s-Setup
 var STUDENTS_FOLDER_NAME = "Students";       // Name of folder with "A-D" class folders
 
@@ -120,10 +120,9 @@ function ProcessStudent(row, classSheet, firstRawGroup)
     const copyFormatRange = "1:" + NUM_OF_ROWS_TO_COPY;     // Format copy range
 
     studentSheets[1].getRange(copyFormatRange).copyTo(studentSheets[0].getRange(copyFormatRange), { formatOnly : true });
-    studentSheets[0].deleteColumn(1);
-
-    for(var i = 1; i < columnsNum; ++i)
-      studentSheets[0].setColumnWidth(i, studentSheets[1].getColumnWidth(i + 1));
+    
+    for(var i = 0; i < columnsNum; ++i)
+      studentSheets[0].setColumnWidth(i + 1, studentSheets[1].getColumnWidth(i + 1));
 
     studentSpreadsheet.deleteSheet(studentSheets[1]);
 
@@ -138,13 +137,13 @@ function ProcessStudent(row, classSheet, firstRawGroup)
     // Set header
     for(var i = 1; i <= ROWS_IN_HEADER; ++i)
     {
-      var studentHeaderFormula = "=IMPORTRANGE(\"" + MAIN_SHEET_LINK + "\";\"" + className + "!B" + (i + firstRawGroup - 1) + ":CC" + (i + firstRawGroup - 1) + "\")";
+      var studentHeaderFormula = "=IMPORTRANGE(\"" + MAIN_SHEET_LINK + "\";\"" + className + "!" + (i + firstRawGroup - 1) + ":" + (i + firstRawGroup - 1) + "\")";
       studentSheets[0].getRange("A" + i + ":A" + i).setFormula(studentHeaderFormula);
     }
 
     // Set marks
     var studentMarksRange   = "A" + NUM_OF_ROWS_TO_COPY + ":A" + NUM_OF_ROWS_TO_COPY;
-    var studentMarksFormula = "=IMPORTRANGE(\"" + MAIN_SHEET_LINK + "\";\"" + className + "!B" + row + ":CC" + row + "\")";
+    var studentMarksFormula = "=IMPORTRANGE(\"" + MAIN_SHEET_LINK + "\";\"" + className + "!" + row + ":" + row + "\")";
     studentSheets[0].getRange(studentMarksRange).setFormula(studentMarksFormula);
   }
 
