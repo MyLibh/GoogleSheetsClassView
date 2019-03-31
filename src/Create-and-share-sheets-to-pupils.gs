@@ -3,8 +3,9 @@
 //====================================================================================================================================================================================
 
 var ROWS_IN_HEADER       = 2;                // Header size,                                              see https://github.com/MyLibh/GoogleSheetsClassView#s-Requirements-Header
-var SECOND_GROUP_ROW     = 23;               // The line the second group starts with,                    see https://github.com/MyLibh/GoogleSheetsClassView#s-Requirements
-var LISTS_TO_COPY        = ["информация"];   // Array of list names
+var SECOND_GROUP_ROW     = NO_SECOND_GROUP;  // The line the second group starts with,                    see https://github.com/MyLibh/GoogleSheetsClassView#s-Requirements
+var LISTS_TO_COPY        = NO_LISTS_TO_COPY; // Array of list names
+
 var MARKS_LIST_NAME      = "Marks";          // Name of list in pupil's spreadsheet where marks would be, see https://github.com/MyLibh/GoogleSheetsClassView#s-Setup
 var STUDENTS_FOLDER_NAME = "Students";       // Name of folder with "A-D" class folders
 
@@ -103,8 +104,13 @@ function ProcessStudent(row, classSheet, firstRowGroup)
                                STUDENTS_FOLDER.createFolder(className);
     var studentFolder      = classFolder.getFoldersByName(filename).hasNext() ? 
                                classFolder.getFoldersByName(filename).next() :  
-                               classFolder.createFolder(filename);                            
-    var studentSpreadsheet = SpreadsheetApp.create("#" + " класс " + "####-####", NUM_OF_ROWS_TO_COPY, columnsNum); 
+                               classFolder.createFolder(filename); 
+                               
+    var studentSsName = SpreadsheetApp.getActiveSpreadsheet().getName();
+    if(studentFolder.getFilesByName(studentSsName).hasNext()) 
+      studentFolder.removeFile(studentFolder.getFilesByName(studentSsName).next());
+                          
+    var studentSpreadsheet = SpreadsheetApp.create(studentSsName, NUM_OF_ROWS_TO_COPY, columnsNum); 
     var copyFile           = DriveApp.getFileById(studentSpreadsheet.getId()); // Copy of 'studentSpreadsheet'
 
     studentFolder.addFile(copyFile);
