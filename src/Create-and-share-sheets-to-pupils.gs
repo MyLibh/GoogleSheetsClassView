@@ -97,66 +97,15 @@ function ProcessStudent(row, classSheet, firstRowGroup)
   const filename    = classSheet.getRange("B" + row + ":B" + row).getValue(); 
   const columnsNum  = classSheet.getLastColumn(); // Number of columns with data
 
-  // Create pupil's folder and spreadsheet
-  {
-    var classFolder        = STUDENTS_FOLDER.getFoldersByName(className).hasNext() ? 
-                               STUDENTS_FOLDER.getFoldersByName(className).next() :  
-                               STUDENTS_FOLDER.createFolder(className);
-    var studentFolder      = classFolder.getFoldersByName(filename).hasNext() ? 
-                               classFolder.getFoldersByName(filename).next() :  
-                               classFolder.createFolder(filename); 
-                               
-    var studentSsName = SpreadsheetApp.getActiveSpreadsheet().getName();
-    if(studentFolder.getFilesByName(studentSsName).hasNext()) 
-      studentFolder.removeFile(studentFolder.getFilesByName(studentSsName).next());
-                          
-    var studentSpreadsheet = SpreadsheetApp.create(studentSsName, NUM_OF_ROWS_TO_COPY, columnsNum); 
-    var copyFile           = DriveApp.getFileById(studentSpreadsheet.getId()); // Copy of 'studentSpreadsheet'
+  var studentProps = CreateStudentFolderAndSpreadsheet(className, filename, columnsNum);
+  var sheets       = CopyFormat(studentProps.spreadsheet, classSheet, columnsNum);
 
-    studentFolder.addFile(copyFile);
-    DriveApp.getRootFolder().removeFile(copyFile);
-  }
-
-  // Copy formatting
-  {
-    var studentSpreadsheet = SpreadsheetApp.openById(studentSpreadsheet.getId());
-    classSheet.copyTo(studentSpreadsheet);
-
-    const studentSheets   = studentSpreadsheet.getSheets(); // Array of sheets(lists)
-    const copyFormatRange = "1:" + NUM_OF_ROWS_TO_COPY;     // Format copy range
-
-    studentSheets[1].getRange(copyFormatRange).copyTo(studentSheets[0].getRange(copyFormatRange), { formatOnly : true });
-    
-    for(var i = 0; i < columnsNum; ++i)
-      studentSheets[0].setColumnWidth(i + 1, studentSheets[1].getColumnWidth(i + 1));
-
-    studentSpreadsheet.deleteSheet(studentSheets[1]);
-
-    CopyLists(SpreadsheetApp.getActiveSpreadsheet(), studentSpreadsheet);
-  }
-
-  // Set content
-  {
-    // Set list name
-    studentSheets[0].setName(MARKS_LIST_NAME);
-
-    // Set header
-    for(var i = 1; i <= ROWS_IN_HEADER; ++i)
-    {
-      var studentHeaderFormula = "=IMPORTRANGE(\"" + MAIN_SHEET_LINK + "\";\"" + className + "!" + (i + firstRowGroup - 1) + ":" + (i + firstRowGroup - 1) + "\")";
-      studentSheets[0].getRange("A" + i + ":A" + i).setFormula(studentHeaderFormula);
-    }
-
-    // Set marks
-    var studentMarksRange   = "A" + NUM_OF_ROWS_TO_COPY + ":A" + NUM_OF_ROWS_TO_COPY;
-    var studentMarksFormula = "=IMPORTRANGE(\"" + MAIN_SHEET_LINK + "\";\"" + className + "!" + row + ":" + row + "\")";
-    studentSheets[0].getRange(studentMarksRange).setFormula(studentMarksFormula);
-  }
+  SetStudentContent(sheets[0], className, firstRowGroup, row);
 
   var emails = String(classSheet.getRange("A" + row + ":A" + row).getValue()).split(", ");
   for(var i = 0; i < emails.length; ++i)
     if(IsEmail(emails[i]))
-      ShareSheet(studentFolder.getId(), emails[i]);
+      ShareSheet(studentProps.folder.getId(), emails[i]);
 }
 
 /*
@@ -164,7 +113,7 @@ function ProcessStudent(row, classSheet, firstRowGroup)
  *
  * \param[in]  obj  The object to find a match
  *
- * \return TRUE if 'obj' matches, otherwise it FALSE
+ * \return  TRUE if 'obj' matches, otherwise it FALSE
  */
 function IsEmail(obj)
 {
@@ -174,9 +123,9 @@ function IsEmail(obj)
 }
 
 /*
- * \brief Finds main sheet folder
+ * \brief  Finds main sheet folder
  *
- * \return The folder that contains the main table
+ * \return  The folder that contains the main table
  */
 function GetMainSheetFolder()
 {
@@ -187,9 +136,9 @@ function GetMainSheetFolder()
 }
 
 /*
- * \brief Creates students' folder if it does not exist
+ * \brief  Creates students' folder if it does not exist
  *
- * \return The folder that will contain each student folder
+ * \return  The folder that will contain each student folder
  */
 function TryToCreateStudentsFolder()
 {
@@ -199,7 +148,7 @@ function TryToCreateStudentsFolder()
 }
 
 /*
- * \brief Shares sheet by email
+ * \brief  Shares sheet by email
  *
  * \param[in]  ssId  Spreadsheet id
  * \param[in]  src   Sheet to get email
@@ -213,7 +162,7 @@ function ShareSheet(ssId, email)
 }
 
 /*
- * \brief Copies list from 'src' to 'dest'
+ * \brief  Copies list from 'src' to 'dest'
  *
  * \param[in]  list  List for copying
  * \param[in]  src   Sheet, which contains 'list'
@@ -241,4 +190,110 @@ function CopyLists(src, dest)
   if(LISTS_TO_COPY != NO_LISTS_TO_COPY)
     for(var i = 0; i < LISTS_TO_COPY.length; ++i)
       CopyList(LISTS_TO_COPY[i], src, dest);
+}
+
+//===============================================================================================================================================================
+
+/*
+ * \brief  Makes IMPORTRANGE for specified row
+ *
+ * \param[in]  className  Name of the sheet where to produce IMPORTRANGE
+ * \param[in]  row        Row for import
+ *
+ * \return  IMPORTRANGE formula
+ */
+function MakeImportrangeRowFormula(className, row)
+{
+  return "=IMPORTRANGE(\"" + MAIN_SHEET_LINK + "\";\"" + className + "!" + row + ":" + row + "\")";
+}
+
+/*
+ * \brief  Sets content in student's sheet
+ *
+ * \param[in]  list           List with marks
+ * \param[in]  className      Name of the list which contains class marks
+ * \param[in]  firstRowGroup  First row of the group
+ * \param[in]  row            Row with student's marks
+ */
+function SetStudentContent(list, className, headerRow,  row)
+{
+  list.setName(MARKS_LIST_NAME);
+
+  // Set header
+  for(var i = 1; i <= ROWS_IN_HEADER; ++i)
+  {
+    var headerFormula = MakeImportrangeRowFormula(className, i + headerRow - 1);
+    list.getRange("A" + i + ":A" + i).setFormula(headerFormula);
+  }
+
+  // Set marks
+  var marksRange   = "A" + NUM_OF_ROWS_TO_COPY + ":A" + NUM_OF_ROWS_TO_COPY;
+  var marksFormula = MakeImportrangeRowFormula(className, row);
+  list.getRange(marksRange).setFormula(marksFormula);
+}
+
+/*
+ * \brief  Creates student's folder and spreadsheet
+ *
+ * \param[in]  className   Name of the list which contains class marks
+ * \param[in]  filename    Name of the student's spreadsheet
+ * \param[in]  columnsNum  Number of columns with data
+ *
+ * \return  Tuple with student's folder and spreadsheet
+ */
+function CreateStudentFolderAndSpreadsheet(className, filename, columnsNum)
+{
+  var classFolder   = STUDENTS_FOLDER.getFoldersByName(className).hasNext() ? 
+                        STUDENTS_FOLDER.getFoldersByName(className).next() :  
+                        STUDENTS_FOLDER.createFolder(className);
+  var studentFolder = classFolder.getFoldersByName(filename).hasNext() ? 
+                        classFolder.getFoldersByName(filename).next() :  
+                        classFolder.createFolder(filename); 
+  
+  var studentSsName = SpreadsheetApp.getActiveSpreadsheet().getName();
+  if(studentFolder.getFilesByName(studentSsName).hasNext()) 
+    studentFolder.removeFile(studentFolder.getFilesByName(studentSsName).next());
+  
+  var studentSpreadsheet = SpreadsheetApp.create(studentSsName, NUM_OF_ROWS_TO_COPY, columnsNum); 
+  var copyFile           = DriveApp.getFileById(studentSpreadsheet.getId()); // Copy of 'studentSpreadsheet'
+  
+  studentFolder.addFile(copyFile);
+  DriveApp.getRootFolder().removeFile(copyFile);
+  
+  var res = 
+  {
+    folder: studentFolder,
+    spreadsheet: studentSpreadsheet
+  };
+  
+  return res;
+}
+
+/*
+ * \brief  Copies list format
+ *
+ * \param[in]  spreadsheet  Student's spreadsheet
+ * \param[in]  classSheet   Sheet with class's marks
+ * \param[in]  columnsNum   Number of columns with data
+ *
+ * \return  Array of student's lists
+ */
+function CopyFormat(spreadsheet, classSheet, columnsNum)
+{
+  var studentSpreadsheet = SpreadsheetApp.openById(spreadsheet.getId());
+  classSheet.copyTo(studentSpreadsheet);
+  
+  const sheets = studentSpreadsheet.getSheets(); // Array of student's sheets(lists)
+  const range  = "1:" + NUM_OF_ROWS_TO_COPY;     // Format copy range
+  
+  sheets[1].getRange(range).copyTo(sheets[0].getRange(range), { formatOnly : true });
+  
+  for(var i = 0; i < columnsNum; ++i)
+    sheets[0].setColumnWidth(i + 1, sheets[1].getColumnWidth(i + 1));
+  
+  studentSpreadsheet.deleteSheet(sheets[1]);
+  
+  CopyLists(SpreadsheetApp.getActiveSpreadsheet(), studentSpreadsheet);
+  
+  return sheets;
 }
