@@ -4,7 +4,7 @@
 
 var ROWS_IN_HEADER       = 2;                // Header size,                                              see https://github.com/MyLibh/GoogleSheetsClassView#s-Requirements-Header
 var SECOND_GROUP_ROW     = NO_SECOND_GROUP;  // The line the second group starts with,                    see https://github.com/MyLibh/GoogleSheetsClassView#s-Requirements
-var LISTS_TO_COPY        = NO_LISTS_TO_COPY; // Array of list names
+var LISTS_TO_COPY        = ["ext"];          // Array of list names
 
 var MARKS_LIST_NAME      = "Marks";          // Name of list in pupil's spreadsheet where marks would be, see https://github.com/MyLibh/GoogleSheetsClassView#s-Setup
 var STUDENTS_FOLDER_NAME = "Students";       // Name of folder with "A-D" class folders
@@ -104,7 +104,7 @@ function ProcessStudent(row, classSheet, firstRowGroup)
 
   var emails = String(classSheet.getRange("A" + row + ":A" + row).getValue()).split(", ");
   for(var i = 0; i < emails.length; ++i)
-    if(IsEmail(emails[i]))
+    if(!studentProps.existed && IsEmail(emails[i]))
       ShareSheet(studentProps.folder.getId(), emails[i]);
 }
 
@@ -162,34 +162,46 @@ function ShareSheet(ssId, email)
 }
 
 /*
- * \brief  Copies list from 'src' to 'dest'
- *
- * \param[in]  list  List for copying
- * \param[in]  src   Sheet, which contains 'list'
- * \param[in]  dest  Destination of copying
- */
-function CopyList(list, src, dest)
-{
-   var сopy_list = src.getSheetByName(list)
-   if(сopy_list != null)
-   {
-     сopy_list.copyTo(dest);
-
-     dest.getSheets()[dest.getSheets().length - 1].setName(list);
-   }
-}
-
-/*
  * \brief Copies all lists from 'LISTS_TO_COPY' to dest sheet
  *
- * \param[in]  src   Sheet, which contains 'LISTS_TO_COPY'
- * \param[in]  dest  Destination of copying
+ * \param[in]  src        Sheet, which contains 'LISTS_TO_COPY'
+ * \param[in]  dest       Destination of copying
  */
-function CopyLists(src, dest)
+function CopyLists(src, dest, className)
 {
   if(LISTS_TO_COPY != NO_LISTS_TO_COPY)
     for(var i = 0; i < LISTS_TO_COPY.length; ++i)
       CopyList(LISTS_TO_COPY[i], src, dest);
+}
+
+/*
+ * \brief  Copies list from 'src' to 'dest'
+ *
+ * \param[in]  list       List for copying
+ * \param[in]  src        Sheet, which contains 'list'
+ * \param[in]  dest       Destination of copying
+ */
+function CopyList(list, src, dest)
+{
+   var list4copying = src.getSheetByName(list);
+   if(list4copying != null)
+   {
+     var new_list = dest.insertSheet();
+     list4copying.copyTo(dest);
+     
+     var sheets = dest.getSheets();
+     var copied_list = sheets[sheets.length - 1];
+     copied_list.getRange("A:Z").copyTo(new_list.getRange("A:Z"), { formatOnly : true });
+
+     var columnsNum = copied_list.getLastColumn();
+     for(var i = 0; i < columnsNum; ++i)
+       new_list.setColumnWidth(i + 1, copied_list.getColumnWidth(i + 1));
+
+     new_list.setName(list);
+     new_list.getRange("A1:A1").setFormula("=IMPORTRANGE(\"" + MAIN_SHEET_LINK + "\";\"" + list + "!A:Z\")");
+     
+     dest.deleteSheet(copied_list);
+   }
 }
 
 //===============================================================================================================================================================
@@ -239,15 +251,17 @@ function SetStudentContent(list, className, headerRow,  row)
  * \param[in]  filename    Name of the student's spreadsheet
  * \param[in]  columnsNum  Number of columns with data
  *
- * \return  Tuple with student's folder and spreadsheet
+ * \return  Tuple with student's existed state, folder and spreadsheet
  */
 function CreateStudentFolderAndSpreadsheet(className, filename, columnsNum)
 {
   var classFolder   = STUDENTS_FOLDER.getFoldersByName(className).hasNext() ? 
                         STUDENTS_FOLDER.getFoldersByName(className).next() :  
                         STUDENTS_FOLDER.createFolder(className);
+  var existed       = false;
   var studentFolder = classFolder.getFoldersByName(filename).hasNext() ? 
-                        classFolder.getFoldersByName(filename).next() :  
+                        (existed = true, 
+                        classFolder.getFoldersByName(filename).next()) :  
                         classFolder.createFolder(filename); 
   
   var studentSsName = SpreadsheetApp.getActiveSpreadsheet().getName();
@@ -262,7 +276,8 @@ function CreateStudentFolderAndSpreadsheet(className, filename, columnsNum)
   
   var res = 
   {
-    folder: studentFolder,
+    existed:     existed,
+    folder:      studentFolder,
     spreadsheet: studentSpreadsheet
   };
   
