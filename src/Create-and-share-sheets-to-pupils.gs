@@ -5,6 +5,7 @@
 var SETUP            = 0x01; // Create students sheets(first time execution)
 var UPDATE_STUDENTS  = 0x02; // Add uncreated students
 var UPDATE_FORMAT    = 0x03; // Update format
+var UPDATE_VIEWERS   = 0x04; // Share additional emails 
 
 var NO_SECOND_GROUP  = null; // Only one group exists
 
@@ -14,7 +15,7 @@ var NO_LISTS_TO_COPY = null; // No lists for copying exist
 //========= User =====================================================================================================================================================================
 //====================================================================================================================================================================================
 
-var SCRIPT_TARGET        = SETUP;            // The purpose of the script
+var SCRIPT_TARGET        = UPDATE_VIEWERS;            // The purpose of the script
 
 var ROWS_IN_HEADER       = 2;                // Header size,                                              see https://github.com/MyLibh/GoogleSheetsClassView#s-Requirements-Header
 var SECOND_GROUP_ROW     = NO_SECOND_GROUP;  // The line the second group starts with,                    see https://github.com/MyLibh/GoogleSheetsClassView#s-Requirements
@@ -109,9 +110,22 @@ function ProcessStudent(row, classSheet, firstRowGroup)
   const columnsNum = classSheet.getLastColumn(); // Number of columns with data
 
   var studentProps = CreateStudentFolderAndSpreadsheet(className, filename, columnsNum);
-  if(studentProps.spreadsheet == null)
+  if(studentProps.spreadsheet == null && SCRIPT_TARGET != UPDATE_VIEWERS)
 	return; // Either UPDATE_FORMAT for the uncreated student, or UPDATE_STUDENT for the existing
 
+  if(SCRIPT_TARGET == UPDATE_VIEWERS)
+  {
+    var viewers = studentProps.folder.getViewers();
+    var emails = String(classSheet.getRange("A" + row + ":A" + row).getValue()).split(", ");
+    
+    for(var i = 0; i < emails.length; ++i)
+      for(var j = 0; j < viewers.length; ++j)
+        if(emails[i] != viewers[j])
+          ShareSheet(studentProps.folder.getId(), emails[i]);
+
+    return;
+  }
+  
   var sheets = ProcessFormat(studentProps.spreadsheet, classSheet, columnsNum);
   ProcessContent(sheets[0], className, firstRowGroup, row);
 
