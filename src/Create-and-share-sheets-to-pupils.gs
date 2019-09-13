@@ -15,14 +15,16 @@ var NO_LISTS_TO_COPY = null; // No lists for copying exist
 //========= User =====================================================================================================================================================================
 //====================================================================================================================================================================================
 
-var SCRIPT_TARGET        = UPDATE_VIEWERS;            // The purpose of the script
+var SCRIPT_TARGET                  = SETUP;            // The purpose of the script
 
-var ROWS_IN_HEADER       = 2;                // Header size,                                              see https://github.com/MyLibh/GoogleSheetsClassView#s-Requirements-Header
-var SECOND_GROUP_ROW     = NO_SECOND_GROUP;  // The line the second group starts with,                    see https://github.com/MyLibh/GoogleSheetsClassView#s-Requirements
-var LISTS_TO_COPY        = ["ext"];          // Array of list names
+var ROWS_IN_HEADER                 = 2;                // Header size,                                              see https://github.com/MyLibh/GoogleSheetsClassView#s-Requirements-Header
+var SECOND_GROUP_ROW               = 18;               // The line the second group starts with,                    see https://github.com/MyLibh/GoogleSheetsClassView#s-Requirements
+var LISTS_TO_COPY                  = ["информация"];   // Array of list names
 
-var MARKS_LIST_NAME      = "Marks";          // Name of list in pupil's spreadsheet where marks would be, see https://github.com/MyLibh/GoogleSheetsClassView#s-Setup
-var STUDENTS_FOLDER_NAME = "Students";       // Name of folder with "A-D" class folders
+var MARKS_LIST_NAME                = "Marks";          // Name of list in pupil's spreadsheet where marks would be, see https://github.com/MyLibh/GoogleSheetsClassView#s-Setup
+var STUDENTS_FOLDER_NAME           = "Students";       // Name of folder with "A-D" class folders
+
+var INDIVIDUAL_STUDENT_FOLDER_SUFF = ", ВТЭК"          // Addition to personal folder name
 
 //====================================================================================================================================================================================
 //========= Technical ================================================================================================================================================================
@@ -153,7 +155,7 @@ function CreateStudentFolderAndSpreadsheet(className, filename, columnsNum)
   var studentFolder = classFolder.getFoldersByName(filename).hasNext() ? 
                         (existed = true, 
                         classFolder.getFoldersByName(filename).next()) :  
-                        classFolder.createFolder(filename); 
+                        classFolder.createFolder(filename + INDIVIDUAL_STUDENT_FOLDER_SUFF); 
   
   var studentSsName      = SpreadsheetApp.getActiveSpreadsheet().getName();
   var studentFiles       = studentFolder.getFilesByName(studentSsName);
