@@ -24,7 +24,7 @@ var LISTS_TO_COPY                  = ["информация"];   // Array of lis
 var MARKS_LIST_NAME                = "оценки";          // Name of list in pupil's spreadsheet where marks would be, see https://github.com/MyLibh/GoogleSheetsClassView#s-Setup
 var STUDENTS_FOLDER_NAME           = "ведомости школьников";       // Name of folder with "A-D" class folders
 
-var INDIVIDUAL_STUDENT_FOLDER_SUFF = ", ВТЭК"          // Addition to personal folder name
+var INDIVIDUAL_STUDENT_FOLDER_SUFF = ", ВТЭК";          // Addition to personal folder name
 
 //====================================================================================================================================================================================
 //========= Technical ================================================================================================================================================================
