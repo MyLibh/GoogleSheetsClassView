@@ -241,7 +241,7 @@ function ProcessList(list, src, dest)
   var list4copying = src.getSheetByName(list);
   if(list4copying != null)
   {
-	if(SCRIPT_TARGET == UPDATE_FORMAT)
+	if(SCRIPT_TARGET == UPDATE_FORMAT && dest.getSheetByName(list))
 	  dest.deleteSheet(dest.getSheetByName(list));
 
 	var new_list = dest.insertSheet();
