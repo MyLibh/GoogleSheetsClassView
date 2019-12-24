@@ -1,0 +1,264 @@
+<style>
+input[type=close] {
+    background-color:red;
+    border: none;
+    color: white;
+    padding: 10px 15px;
+    margin: 4px 2px;
+    cursor: pointer;
+    float:riautoght;
+    width: 40px;
+    font-weight: bold;
+}
+
+input[type=submit] {
+    background-color:green;
+    border: none;
+    color: white;
+    padding: 10px 15px;
+    margin: 4px 2px;
+    cursor: pointer;
+    float: left;
+    width: auto;
+    font-weight: bold;
+}
+
+input[type=text] {
+    width: 250px;
+    padding: 10px 15px;
+    border: 2px solid black;
+    border-radius: 5px;
+    font-size: medium;
+    font-family:Arial, Helvetica, sans-serif;
+}
+
+select {
+    width: 285px;
+    padding: 10px 15px;
+    background: white;
+    border: 2px solid black;
+    border-radius: 5px;
+    font-size: medium;
+    font-family:Arial, Helvetica, sans_serif;
+}
+
+option {
+    font-size: medium;
+}
+
+label {
+    color:black;
+    font-weight: bold;
+    display: block;
+    width: 60%;
+    float: left;
+    font-size: large;
+    margin-bottom: 10px;
+}
+
+label:after {
+    content: ":"
+}
+
+div {
+    margin-top: 10px;
+}
+
+.hide {
+    display: none;
+}
+
+.show {
+    display: block;
+}
+
+.wrong_input {
+    border: 2px solid red;
+}
+
+.good_input {
+    border: 2px solid green;
+}
+</style>
+
+<form id=params>
+    <div>
+        <label for="script_target">Задача</label><br>
+        <select id="script_target" onclick="set_target_params()" required>
+            <option value="0x01">Create students sheets(first time execution)</option>
+            <option value="0x02">Add uncreated students</option>
+            <option value="0x03">Update format</option>
+            <option value="0x04">Share additional emails</option>
+        </select>
+    </div>
+
+    <div id="div_sfn" class="hide">
+        <label for="students_folder_name">Название папки со студентами</label><br>
+        <input type="text" id="students_folder_name" value="ведомости школьников"/>
+    </div>
+
+    <div id="div_mln" class="hide">
+        <label for="marks_list_name">Название листа с оценками</label><br>
+        <input type="text" id="marks_list_name" value="оценки"/>
+    </div>
+
+    <div id="div_sfs" class="hide">
+        <label for="student_folder_stuff">Добавок к папке студента</label><br>
+        <input type="text" id="student_folder_stuff" value=", ВТЭК"/>
+    </div>
+
+    <div id="div_rih" class="hide">
+        <label for="rows_in_header">Количество строк в шапке</label><br>
+        <input type="text" id="rows_in_header" value="3"/>
+    </div>
+
+    <div id="div_sg" class="hide">
+        <input type="checkbox" id="second_group" onclick="second_group_onclick()" unchecked/>
+        Вторая группа<br>
+    </div>
+
+    <div id="div_sgr" class="hide">
+        <input type="text" id="second_group_row" value="21" placeholder="Номер строки" va>
+    </div>
+
+    <div id="div_l" class="hide">
+        <input type="checkbox" id="lists" onclick="lists_onclick()" unchecked/>
+        Листы для копирования<br>
+    </div>
+
+    <div id="div_ltc" class="hide">
+        <select id="lists_to_copy" value="" multiple/>
+        <? var sheets = SpreadsheetApp.getActiveSpreadsheet().getSheets();
+           var length = sheets.length;
+              for(var i = 0; i < length; ++i){ ?>
+            <option value=<?= sheets[i].getName() ?>><?= sheets[i].getName() ?></option>
+        <? } ?>
+        </select>
+    </div>
+
+    <div id="div_s" class="hide">
+    <input type="submit" value="Submit" onclick="send_data()"/>
+    </div>
+
+    <input type="close" value="Close" onclick="google.script.host.close()"/>
+</form>
+
+<script>
+    function set_target_params()
+    {
+        var el = document.getElementById("script_target");
+        var value = el.options[el.selectedIndex].value;
+
+        document.getElementById("div_sfn").className = "hide";
+        document.getElementById("div_rih").className = "hide";
+        document.getElementById("div_mln").className = "hide";
+        document.getElementById("div_sfs").className = "hide";
+        document.getElementById("div_l").className = "hide";
+        document.getElementById("div_ltc").className = "hide";
+        document.getElementById("div_sg").className = "hide";
+        document.getElementById("div_sgr").className = "hide";
+
+        document.getElementById("div_s").className = "show";
+
+        if(value == "0x01") // SETUP
+        {
+            document.getElementById("div_sfn").className = "show";
+            document.getElementById("div_rih").className = "show";
+            document.getElementById("div_mln").className = "show";
+            document.getElementById("div_sfs").className = "show";
+            document.getElementById("div_l").className = "show";
+            if(document.getElementById("lists").checked)
+                document.getElementById("div_ltc").className = "show";
+            document.getElementById("div_sg").className = "show";
+            if(document.getElementById("second_group").checked)
+                document.getElementById("div_sgr").className = "show";
+        }
+        else if(value == "0x02") // UPDATE_STUDENTS
+        {
+            document.getElementById("div_mln").className = "show";
+            document.getElementById("div_rih").className = "show";
+            document.getElementById("div_sfs").className = "show";
+            document.getElementById("div_l").className = "show";
+            if(document.getElementById("lists").checked)
+                document.getElementById("div_ltc").className = "show";
+            document.getElementById("div_sg").className = "show";
+            if(document.getElementById("second_group").checked)
+                document.getElementById("div_sgr").className = "show";
+        }
+        else if(value == "0x03") // UPDATE_FORMAT
+        {
+            document.getElementById("div_rih").className = "show";
+            document.getElementById("div_l").className = "show";
+            if(document.getElementById("lists").checked)
+                document.getElementById("div_ltc").className = "show";
+        }
+        else if(value == "0x04") // UPDATE_VIEWERS
+        {
+            document.getElementById("div_s").className = "show";
+        }
+
+    }
+
+    function second_group_onclick()
+    {
+        var checked = document.getElementById("second_group").checked;
+        var el = document.getElementById("div_sgr");
+        if(checked == true)
+            el.className = "show";
+        else
+            el.className = "hide";
+    }
+
+    function lists_onclick()
+    {
+        var checked = document.getElementById("lists").checked;
+        var el = document.getElementById("div_ltc");
+        if(checked == true)
+            el.className = "show";
+        else
+            el.className = "hide";
+    }
+
+    function check_data()
+    {
+        var dict = {
+            "rows_in_header"       : "div_rih",
+            "students_folder_name" : "div_sfn",
+            "marks_list_name"      : "div_mln",
+            "student_folder_stuff" : "div_sfs",
+            "lists_to_copy"        : "div_ltc",
+            "second_group_row"     : "div_sgr"};
+        var ok = true;
+        for(var key in dict)
+        {
+            var el = document.getElementById(key);
+            var div = document.getElementById(dict[key]);
+            if(div.className == "show")
+            {
+                if(el.value == "")
+                {
+                    // el.className = "wrong_input";
+                    ok = false;
+
+                    break;
+                }
+                else
+                    ; // el.className = "good_input";
+            }
+        }
+
+        return ok;
+    }
+
+    function send_data()
+    {
+        if(check_data())
+        {
+            google.script.run.test(params);
+
+            google.script.host.close()
+        }
+        else
+            alert("Не все данные введены!");
+    }
+</script>
