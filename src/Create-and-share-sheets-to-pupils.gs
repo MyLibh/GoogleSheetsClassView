@@ -7,52 +7,47 @@ var UPDATE_STUDENTS  = 0x02; // Add uncreated students
 var UPDATE_FORMAT    = 0x03; // Update format
 var UPDATE_VIEWERS   = 0x04; // Share additional emails
 
-var NO_SECOND_GROUP  = null; // Only one group exists
-
-var NO_LISTS_TO_COPY = null; // No lists for copying exist
-
 //====================================================================================================================================================================================
 //========= User =====================================================================================================================================================================
 //====================================================================================================================================================================================
 
-var SCRIPT_TARGET;                  // = UPDATE_STUDENTS;           The purpose of the script
+var SCRIPT_TARGET;                  // The purpose of the script
 
-var ROWS_IN_HEADER;                 // = 3;                         Header size,                           see https://github.com/MyLibh/GoogleSheetsClassView#s-Requirements-Header
-var SECOND_GROUP_ROW;               // = 21;                        The line the second group starts with, see https://github.com/MyLibh/GoogleSheetsClassView#s-Requirements
-var LISTS_TO_COPY;                  // = ["информация"];            Array of list names
+var ROWS_IN_HEADER;                 // Header size
+var SECOND_GROUP_ROW = null;        // The line the second group starts with
+var LISTS_TO_COPY    = null;        // Array of list names
 
-var MARKS_LIST_NAME;                // = "оценки";                  Name of list in pupil's spreadsheet where marks would be, see https://github.com/MyLibh/GoogleSheetsClassView#s-Setup
-var STUDENTS_FOLDER_NAME;           // = "ведомости школьников";    Name of folder with "A-D" class folders
+var MARKS_LIST_NAME;                // Name of list in pupil's spreadsheet where marks would be
+var STUDENTS_FOLDER_NAME;           // Name of folder with "A-D" class folders
 
-var INDIVIDUAL_STUDENT_FOLDER_SUFF; // = ", ВТЭК";                  Addition to personal folder name
+var INDIVIDUAL_STUDENT_FOLDER_SUFF; // Addition to personal folder name
 
 //====================================================================================================================================================================================
 //========= Technical ================================================================================================================================================================
 //====================================================================================================================================================================================
 
-var NUM_OF_ROWS_TO_COPY      = ROWS_IN_HEADER + 1;                             // Number of rows in header and row for student's marks
-var MAIN_SHEET_LINK          = SpreadsheetApp.getActiveSpreadsheet().getUrl(); // Link to the table with marks for all classes
-var MAIN_SHEET_PARENT_FOLDER = GetMainSheetFolder();                           // The folder that contains the table with marks
-var STUDENTS_FOLDER          = TryToCreateStudentsFolder();                    // Folder with "A-D" class folders
+var NUM_OF_ROWS_TO_COPY      // Number of rows in header and row for student's marks
+var MAIN_SHEET_LINK          // Link to the table with marks for all classes
+var MAIN_SHEET_PARENT_FOLDER // The folder that contains the table with marks
+var STUDENTS_FOLDER;         // Folder with "A-D" class folders
 
 //====================================================================================================================================================================================
 //========= Core =====================================================================================================================================================================
 //====================================================================================================================================================================================
 
-function test(params)
+function start(params)
 {
     params = params[""];
-    Logger.log(params);
 
-    SCRIPT_TARGET                  = params[0];
+    SCRIPT_TARGET                  = Number(params[0]);
     STUDENTS_FOLDER_NAME           = params[1];
     MARKS_LIST_NAME                = params[2];
     INDIVIDUAL_STUDENT_FOLDER_SUFF = params[3];
-    ROWS_IN_HEADER                 = params[4];
+    ROWS_IN_HEADER                 = Number(params[4]);
 
     var i = 5;
     if (params[i] == "on")
-        SECOND_GROUP_ROW = params[++i];
+        SECOND_GROUP_ROW = Number(params[++i]);
 
     if (++i + 1 < params.length - 1) // -1 for "Close"
     {
@@ -61,15 +56,22 @@ function test(params)
             LISTS_TO_COPY.push(params[i]);
     }
 
-    /*
-    Logger.log(SCRIPT_TARGET);
-    Logger.log(STUDENTS_FOLDER_NAME);
-    Logger.log(MARKS_LIST_NAME);
-    Logger.log(INDIVIDUAL_STUDENT_FOLDER_SUFF);
-    Logger.log(ROWS_IN_HEADER);
-    Logger.log(SECOND_GROUP_ROW);
-    Logger.log(LISTS_TO_COPY);
-    */
+    NUM_OF_ROWS_TO_COPY      = ROWS_IN_HEADER + 1;
+    MAIN_SHEET_LINK          = SpreadsheetApp.getActiveSpreadsheet().getUrl(); 
+    MAIN_SHEET_PARENT_FOLDER = GetMainSheetFolder();                         
+    STUDENTS_FOLDER          = TryToCreateStudentsFolder();                    
+    
+    Logger.log("target: ", SCRIPT_TARGET);
+    Logger.log("students folder name:", STUDENTS_FOLDER_NAME);
+    Logger.log("marks list name: ", MARKS_LIST_NAME);
+    Logger.log("student folder stuff: ", INDIVIDUAL_STUDENT_FOLDER_SUFF);
+    Logger.log("rows in header: ", ROWS_IN_HEADER);
+    Logger.log("second group row: ", SECOND_GROUP_ROW);
+    Logger.log("lists to copy: ", LISTS_TO_COPY);
+    Logger.log("rows to copy: ", NUM_OF_ROWS_TO_COPY);
+    Logger.log("main sheet link: ", MAIN_SHEET_LINK);
+    Logger.log("main sheet parent folder: ", MAIN_SHEET_PARENT_FOLDER);
+    Logger.log("students folder: ", STUDENTS_FOLDER);
 
     Main();
 }
@@ -102,12 +104,12 @@ function Main()
 
   const source     = spreadsheet.getSheets();
   const classesNum = spreadsheet.getNumSheets();
-  for(var class = 0; class < classesNum; ++class)
+  for(var classIdx = 0; classIdx < classesNum; ++classIdx)
   {
-    if(LISTS_TO_COPY != NO_LISTS_TO_COPY && LISTS_TO_COPY.indexOf(source[class].getName()) != -1)
+    if(LISTS_TO_COPY != null && LISTS_TO_COPY.indexOf(source[classIdx].getName()) != -1)
       continue;
 
-    ProcessClass(source[class]);
+    ProcessClass(source[classIdx]);
   }
 }
 
@@ -119,10 +121,10 @@ function Main()
 function ProcessClass(classSheet)
 {
   const rowsNum             = classSheet.getLastRow(); // Number of rows with data
-  const lastRowInFirstGroup = (SECOND_GROUP_ROW == NO_SECOND_GROUP)? rowsNum : SECOND_GROUP_ROW - 1;
+  const lastRowInFirstGroup = (SECOND_GROUP_ROW == null)? rowsNum : SECOND_GROUP_ROW - 1;
 
   ProcessGroup(classSheet, 1, lastRowInFirstGroup);
-  if (SECOND_GROUP_ROW != NO_SECOND_GROUP)
+  if (SECOND_GROUP_ROW != null)
     ProcessGroup(classSheet, SECOND_GROUP_ROW, rowsNum);
 }
 
@@ -217,14 +219,11 @@ function CreateStudentFolderAndSpreadsheet(className, filename, columnsNum)
   if(SCRIPT_TARGET == SETUP || (SCRIPT_TARGET == UPDATE_STUDENTS && !studentFiles.hasNext()))
   {
 	if(studentFiles.hasNext())
-      studentFolder.removeFile(studentFiles.next());
+      studentFiles.next().setTrashed(true);
 
     studentSpreadsheet = SpreadsheetApp.create(studentSsName, NUM_OF_ROWS_TO_COPY, columnsNum);
-
-    var copyFile = DriveApp.getFileById(studentSpreadsheet.getId()); // Copy of 'studentSpreadsheet'
-
-    studentFolder.addFile(copyFile);
-    DriveApp.getRootFolder().removeFile(copyFile);
+    
+    DriveApp.getFileById(studentSpreadsheet.getId()).moveTo(studentFolder);
   }
   else if(SCRIPT_TARGET == UPDATE_FORMAT && studentFiles.hasNext())
   {
@@ -278,7 +277,7 @@ function ProcessFormat(spreadsheet, classSheet, columnsNum)
  */
 function ProcessLists(src, dest, className)
 {
-  if(LISTS_TO_COPY != NO_LISTS_TO_COPY)
+  if(LISTS_TO_COPY != null)
     for(var i = 0; i < LISTS_TO_COPY.length; ++i)
       ProcessList(LISTS_TO_COPY[i], src, dest);
 }
