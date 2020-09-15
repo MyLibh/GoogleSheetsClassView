@@ -1,3 +1,14 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <base target="_top">
+  </head>
+  <body>
+    
+  </body>
+</html>
+
+
 <style>
 input[type=close] {
     background-color:red;
@@ -253,11 +264,7 @@ div {
     function send_data()
     {
         if(check_data())
-        {
-            google.script.run.test(params);
-
-            google.script.host.close()
-        }
+            google.script.run.start(params);
         else
             alert("Не все данные введены!");
     }
