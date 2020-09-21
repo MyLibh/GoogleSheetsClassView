@@ -26,10 +26,10 @@ var INDIVIDUAL_STUDENT_FOLDER_SUFF; // Addition to personal folder name
 //========= Technical ================================================================================================================================================================
 //====================================================================================================================================================================================
 
-var NUM_OF_ROWS_TO_COPY      // Number of rows in header and row for student's marks
-var MAIN_SHEET_LINK          // Link to the table with marks for all classes
-var MAIN_SHEET_PARENT_FOLDER // The folder that contains the table with marks
-var STUDENTS_FOLDER;         // Folder with "A-D" class folders
+var NUM_OF_ROWS_TO_COPY;      // Number of rows in header and row for student's marks
+var MAIN_SHEET_LINK;          // Link to the table with marks for all classes
+var MAIN_SHEET_PARENT_FOLDER; // The folder that contains the table with marks
+var STUDENTS_FOLDER;          // Folder with "A-D" class folders
 
 //====================================================================================================================================================================================
 //========= Core =====================================================================================================================================================================
