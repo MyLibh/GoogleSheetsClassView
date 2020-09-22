@@ -169,7 +169,7 @@ function ProcessStudent(row, classSheet, firstRowGroup)
 
   var studentProps = CreateStudentFolderAndSpreadsheet(className, filename, columnsNum);
   if(studentProps.spreadsheet == null && SCRIPT_TARGET != UPDATE_VIEWERS)
-	return; // Either UPDATE_FORMAT for the uncreated student, or UPDATE_STUDENT for the existing
+	  return; // Either UPDATE_FORMAT for the uncreated student
 
   if(SCRIPT_TARGET == UPDATE_VIEWERS)
   {
@@ -180,6 +180,12 @@ function ProcessStudent(row, classSheet, firstRowGroup)
       for(var j = 0; j < viewers.length; ++j)
         if(emails[i] != viewers[j])
           ShareSheet(studentProps.folder.getId(), emails[i]);
+
+    return;
+  }
+  else if (SCRIPT_TARGET == UPDATE_STUDENTS && studentProps.existed)
+  {
+    ProcessContent(SpreadsheetApp.openById(studentProps.spreadsheet.getId()).getSheets()[0], className, firstRowGroup, row);
 
     return;
   }
@@ -225,9 +231,10 @@ function CreateStudentFolderAndSpreadsheet(className, filename, columnsNum)
     
     DriveApp.getFileById(studentSpreadsheet.getId()).moveTo(studentFolder);
   }
-  else if(SCRIPT_TARGET == UPDATE_FORMAT && studentFiles.hasNext())
+  else if((SCRIPT_TARGET == UPDATE_FORMAT || SCRIPT_TARGET == UPDATE_STUDENTS) && studentFiles.hasNext())
   {
     studentSpreadsheet = studentFiles.next();
+    existed = true;
   }
 
   var res =
